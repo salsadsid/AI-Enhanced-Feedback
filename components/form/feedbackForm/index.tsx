@@ -21,9 +21,11 @@ type FeedbackFormProps = {
   type: string;
 };
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL as string;
+
 // Updated mutation function to handle FeedbackFormProps data
 const postFeedback = async (data: FeedbackFormProps) => {
-  const response = await axios.post("http://localhost:8000/api/feedback", data);
+  const response = await axios.post(`${API_URL}api/feedback`, data);
   return response.data;
 };
 
