@@ -11,27 +11,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { InfoIcon } from "lucide-react";
-import { SubmitHandler } from "react-hook-form";
+import { useState } from "react";
+import { Controller, SubmitHandler } from "react-hook-form";
 import useFeedbackForm from "./useFeedbackForm.hook";
 
 // Define the FeedbackFormProps type
 type FeedbackFormProps = {
-  message: string;
+  feedback: string;
   type: string;
 };
 
-type PostFeedbackRequest = {
-  feedback: string;
-  aiResponse: string;
-};
-
 // Updated mutation function to handle FeedbackFormProps data
-const postFeedback = async (data: PostFeedbackRequest) => {
+const postFeedback = async (data: FeedbackFormProps) => {
   const response = await axios.post("http://localhost:8000/api/feedback", data);
   return response.data;
 };
 
 export default function FeedbackForm() {
+  const [aiResponse, setAiResponse] = useState("");
   const renderFeedbackFormProps = useFeedbackForm();
   const {
     register,
@@ -41,69 +38,108 @@ export default function FeedbackForm() {
 
   // Ensure mutation expects FeedbackFormProps as input type
   const mutation = useMutation({
-    mutationFn: postFeedback, // Use the updated mutation function
+    mutationFn: postFeedback, // Use the updated mutation function.
+    onSuccess: (data) => {
+      setAiResponse(data.aiResponse);
+    },
   });
 
   // Submit handler for the form
   const onSubmit: SubmitHandler<FeedbackFormProps> = (data) => {
+    console.log(data);
     const reqData = {
-      feedback: data.message,
-      aiResponse: data.type,
+      feedback: data.feedback,
+      type: data.type,
     };
 
     mutation.mutate(reqData); // Correctly pass the data to mutation
   };
 
+  console.log(mutation);
+
+  // Render the form
   return (
     <div>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
         <div className="">
           <Textarea
-            {...register("message", {
+            {...register("feedback", {
               required: {
                 value: true,
-                message: "Message is required",
+                message: "Feedback is required",
               },
             })}
             className="resize-none text-base"
-            placeholder="Message"
+            placeholder="Please enter your feedback here"
             rows={5}
             cols={60}
           />
-          {errors.message && (
+          {errors.feedback && (
             <span className="text-red-500 text-sm mt-1 font-medium flex items-center gap-2">
-              <InfoIcon className="w-4 h-4" /> {errors.message.message}
+              <InfoIcon className="w-4 h-4" /> {errors.feedback.message}
             </span>
           )}
         </div>
 
         <div>
-          <Select
-            defaultValue="bug"
-            {...register("type", {
-              required: {
-                value: true,
-                message: "Type is required",
-              },
-            })}
+          <label className="text-base mb-1 inline-block font-medium">
+            Select a type
+          </label>
+          <Controller
+            control={renderFeedbackFormProps.control}
             name="type"
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="bug">Bug</SelectItem>
-              <SelectItem value="idea">Idea</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
-            </SelectContent>
-          </Select>
+            rules={{ required: "Type is required" }}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger {...field}>
+                  <SelectValue placeholder="Select a type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bug">Bug</SelectItem>
+                  <SelectItem value="idea">Idea</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
           {errors.type && (
             <span className="text-red-500">{errors.type.message}</span>
           )}
         </div>
-        <Button type="submit" size={"lg"} className="text-lg">
-          Submit
+        {
+          // Display success message if mutation is successful
+          mutation.isSuccess && (
+            <span className="text-green-500 text-lg font-medium">
+              Feedback submitted successfully!
+            </span>
+          )
+        }
+        {
+          // Display error message if mutation fails
+          mutation.isError && (
+            <span className="text-red-500 flex gap-2 items-center text-base font-medium">
+              <InfoIcon className="w-4 h-4" /> An error occurred. Please try
+              again later.
+            </span>
+          )
+        }
+        <Button
+          type="submit"
+          disabled={mutation.isPending}
+          size={"lg"}
+          className="text-lg"
+        >
+          {mutation.isPending ? "Submitting..." : "Submit"}
         </Button>
+        {aiResponse && (
+          <div className="text-lg max-w-xl font-medium bg-gray-100 p-4 rounded-lg ">
+            <p className="text-blue-500">AI Response:</p>
+            <div
+              dangerouslySetInnerHTML={{ __html: aiResponse }}
+              className="leading-8"
+            ></div>
+          </div>
+        )}
       </form>
     </div>
   );

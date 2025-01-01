@@ -2,14 +2,14 @@
 import { useForm } from "react-hook-form";
 
 type FeedbackFormProps = {
-  message: string;
+  feedback: string;
   type: string;
 };
 
 const useFeedbackForm = () => {
   const renderFeedbackFormProps = useForm<FeedbackFormProps>({
     defaultValues: {
-      message: "",
+      feedback: "",
       type: "bug",
     },
     mode: "onBlur",
