@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useQuery } from "@tanstack/react-query";
 import { InfoIcon } from "lucide-react";
 import { SubmitHandler } from "react-hook-form";
 import useFeedbackForm from "./useFeedbackForm.hook";
@@ -15,6 +16,13 @@ type FeedbackFormProps = {
   message: string;
   type: string;
 };
+
+const getApiData = async () => {
+  const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+  const data = await response.json();
+  return data;
+};
+
 export default function FeedbackForm() {
   const renderFeedbackFormProps = useFeedbackForm();
   const {
@@ -22,14 +30,17 @@ export default function FeedbackForm() {
     handleSubmit,
     formState: { errors },
   } = renderFeedbackFormProps;
-
-  console.log(errors);
+  const { data: myData } = useQuery({
+    queryKey: ["myData"],
+    queryFn: getApiData,
+  });
+  console.log(myData);
   const onSubmit: SubmitHandler<FeedbackFormProps> = (data) => {
     console.log(data);
   };
   return (
     <div>
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
         <div className="">
           <Textarea
             {...register("message", {
@@ -74,7 +85,7 @@ export default function FeedbackForm() {
             <span className="text-red-500">{errors.type.message}</span>
           )}
         </div>
-        <Button type="submit" className="">
+        <Button type="submit" size={"lg"} className="text-lg">
           Submit
         </Button>
       </form>
