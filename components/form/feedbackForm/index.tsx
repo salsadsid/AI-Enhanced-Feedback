@@ -8,19 +8,27 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
 import { InfoIcon } from "lucide-react";
 import { SubmitHandler } from "react-hook-form";
 import useFeedbackForm from "./useFeedbackForm.hook";
+
+// Define the FeedbackFormProps type
 type FeedbackFormProps = {
   message: string;
   type: string;
 };
 
-const getApiData = async () => {
-  const response = await fetch("https://jsonplaceholder.typicode.com/posts");
-  const data = await response.json();
-  return data;
+type PostFeedbackRequest = {
+  feedback: string;
+  aiResponse: string;
+};
+
+// Updated mutation function to handle FeedbackFormProps data
+const postFeedback = async (data: PostFeedbackRequest) => {
+  const response = await axios.post("http://localhost:8000/api/feedback", data);
+  return response.data;
 };
 
 export default function FeedbackForm() {
@@ -30,14 +38,22 @@ export default function FeedbackForm() {
     handleSubmit,
     formState: { errors },
   } = renderFeedbackFormProps;
-  const { data: myData } = useQuery({
-    queryKey: ["myData"],
-    queryFn: getApiData,
+
+  // Ensure mutation expects FeedbackFormProps as input type
+  const mutation = useMutation({
+    mutationFn: postFeedback, // Use the updated mutation function
   });
-  console.log(myData);
+
+  // Submit handler for the form
   const onSubmit: SubmitHandler<FeedbackFormProps> = (data) => {
-    console.log(data);
+    const reqData = {
+      feedback: data.message,
+      aiResponse: data.type,
+    };
+
+    mutation.mutate(reqData); // Correctly pass the data to mutation
   };
+
   return (
     <div>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
