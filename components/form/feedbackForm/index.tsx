@@ -112,7 +112,7 @@ export default function FeedbackForm() {
           // Display success message if mutation is successful
           mutation.isSuccess && (
             <span className="text-green-500 text-lg font-medium">
-              Feedback submitted successfully!
+              Feedback submitted successfully! 🚀
             </span>
           )
         }
@@ -135,7 +135,7 @@ export default function FeedbackForm() {
         </Button>
         {aiResponse && (
           <div className="text-lg max-w-xl font-medium bg-gray-100 p-4 rounded-lg ">
-            <p className="text-blue-500">AI Response:</p>
+            <p className="text-blue-500">AI Response: ✈️</p>
             <div
               dangerouslySetInnerHTML={{ __html: aiResponse }}
               className="leading-8"
